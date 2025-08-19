@@ -43,6 +43,26 @@ function showErrorWidget(message) {
   Script.complete();
 }
 
+// ====== 网络图片加载 ======
+async function loadNetworkImage(url, localPath) {
+  try {
+    const req = new Request(url);
+    const image = await req.loadImage();
+    if (image && localPath) {
+      try {
+        fm.writeImage(localPath, image);
+        console.log(`[日志] 图片已缓存到本地：${localPath}`);
+      } catch (e) {
+        console.log(`[日志] 图片缓存失败：${e}`);
+      }
+    }
+    return image;
+  } catch (e) {
+    console.log(`[日志] 网络图片加载失败：${e}`);
+    return null;
+  }
+}
+
 // ====== 数据加载 ======
 console.log("[日志] 开始加载快递数据...");
 let parcels = [];
@@ -62,15 +82,12 @@ try {
   let allParcels = JSON.parse(rawData) || [];
   console.log(`[日志] 读取到快递数据条数：${allParcels.length}`);
 
-  // 按时间从新到旧排序
   allParcels.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
   console.log("[日志] 快递数据已按时间排序");
 
-  // 统计所有未取件的数量
   unpickedCount = allParcels.filter(p => p.status !== "已取件").length;
   console.log(`[日志] 未取件总数：${unpickedCount}`);
 
-  // 右侧显示：跳过已取件，最多 5 条
   const maxShow = 5;
   let display = [];
   for (let i = 0; i < allParcels.length && display.length < maxShow; i++) {
@@ -106,14 +123,12 @@ const separatorHeight = 3;
 const extraTopBottomPadding = 4;
 const rightContentOffset = 4;
 
-// 单条高度固定按 5 条来算
 const totalSpacing = itemSpacing * (fixedCount - 1);
 const totalSeparatorHeight = separatorHeight * (fixedCount - 1);
 const usableHeight = leftHeight - totalSpacing - totalSeparatorHeight - extraTopBottomPadding * 2;
 const singleHeight = Math.floor(usableHeight / fixedCount);
 console.log(`[日志] 单条快递显示高度：${singleHeight}`);
 
-// 固定字体大小
 const companyFontSize = singleHeight > 50 ? 14 : singleHeight > 40 ? 12 : 10;
 const codeFontSize = companyFontSize - 1;
 const addrFontSize = Math.max(codeFontSize - 1, 9);
@@ -125,7 +140,7 @@ w.cornerRadius = 16;
 w.setPadding(12, 12, 12, 12);
 w.size = new Size(widgetWidth, widgetHeight);
 
-// ==== 没有快递时：只显示提示 ====
+// ==== 没有快递时显示提示 ====
 if (parcels.length === 0) {
   console.log("[日志] 没有快递，显示空提示");
   let emptyStack = w.addStack();
@@ -183,8 +198,21 @@ titleRow.layoutHorizontally();
 titleRow.centerAlignContent();
 titleRow.spacing = 5;
 
-if (await ensureFile(imgPath)) {
-  let image = fm.readImage(imgPath);
+// ====== 左侧图标加载逻辑（网络优先，iCloud缓存，失败回退表情） ======
+let image = null;
+if (fm.fileExists(imgPath)) {
+  if (fm.isFileStoredIniCloud(imgPath) && !fm.isFileDownloaded(imgPath)) {
+    await fm.downloadFileFromiCloud(imgPath);
+    console.log("[日志] 本地 iCloud 图片下载完成");
+  }
+  image = fm.readImage(imgPath);
+}
+
+if (!image) {
+  image = await loadNetworkImage("https://i.imgs.ovh/2025/08/19/I9H1e.png", imgPath);
+}
+
+if (image) {
   let icon = titleRow.addImage(image);
   icon.imageSize = new Size(26, 26);
   console.log("[日志] 左侧图标使用图片显示");

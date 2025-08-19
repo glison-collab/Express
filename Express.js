@@ -86,7 +86,7 @@ try {
   console.log("[日志] 快递数据已按时间排序");
 
   unpickedCount = allParcels.filter(p => p.status !== "已取件").length;
-  console.log(`[日志] 未取件总数：${unpickedCount}`);
+  console.log(`[日志] 待取件总数：${unpickedCount}`);
 
   const maxShow = 5;
   let display = [];
@@ -154,7 +154,7 @@ if (parcels.length === 0) {
   row.centerAlignContent();
   row.addSpacer();
 
-  let emptyText = row.addText("暂时还没有快递信息呢");
+  let emptyText = row.addText("暂时还没有快递信息呢💨");
   emptyText.font = Font.boldSystemFont(15);
   emptyText.textColor = color("#999999", "#AAAAAA");
   emptyText.centerAlignText();

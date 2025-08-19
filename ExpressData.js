@@ -167,20 +167,20 @@ async function markParcelStatus() {
 
   let selectMenu = new Alert();
   selectMenu.title = "选择要标记状态的快递";
-  parcels.forEach(p => selectMenu.addAction(`${p.type} - ${p.code} [${p.status || "未取件"}]`));
+  parcels.forEach(p => selectMenu.addAction(`${p.type} - ${p.code} [${p.status || "待取件"}]`));
   selectMenu.addCancelAction("取消");
   let selectIndex = await selectMenu.presentSheet();
 
   if (selectIndex >= 0 && selectIndex < parcels.length) {
     let statusMenu = new Alert();
     statusMenu.title = "选择快递状态";
-    statusMenu.addAction("未取件");
+    statusMenu.addAction("待取件");
     statusMenu.addAction("已取件");
     statusMenu.addCancelAction("取消");
     let statusIndex = await statusMenu.presentSheet();
 
     if (statusIndex === 0 || statusIndex === 1) {
-      parcels[selectIndex].status = statusIndex === 0 ? "未取件" : "已取件";
+      parcels[selectIndex].status = statusIndex === 0 ? "待取件" : "已取件";
       saveParcels(parcels);
       console.log(`[日志] 快递状态更新: ${parcels[selectIndex].type} - ${parcels[selectIndex].code} -> ${parcels[selectIndex].status}`);
       await showAlert("提示", `快递状态已更新为：${parcels[selectIndex].status}`);
@@ -250,7 +250,7 @@ if (typeof args !== "undefined" && args.shortcutParameter) {
       await showAlert("提示", "暂无快递记录");
     } else {
       let display = list.map((p, i) =>
-        `${i + 1}. ${p.type} 取件码:${p.code} [${p.status || "未取件"}]\n${p.address}\n${p.time}`
+        `${i + 1}. ${p.type} 取件码:${p.code} [${p.status || "待取件"}]\n${p.address}\n${p.time}`
       ).join("\n\n");
       console.log("[日志] 显示快递历史");
       QuickLook.present(display);
